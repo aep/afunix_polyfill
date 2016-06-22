@@ -204,7 +204,7 @@ The main use cases are covered from a cient perspective:
 
 1) "remote procedure call returning void"
 ```bash
-$ unixbus call session:myservice:dostuff
+$ unixbus invoke session:myservice:dostuff
 $
 ```
 
