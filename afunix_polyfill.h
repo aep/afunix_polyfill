@@ -10,6 +10,10 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 //----------------- API ----------------
 #define AFUNIX_PATH_CONVENTION 0x1
 #define AFUNIX_MAKE_PATH       0x2
@@ -74,7 +78,8 @@ static void afunix_free_internal(struct afunix_polyfil_t *pf)
 
 int afunix_socket (int options)
 {
-    struct afunix_polyfil_t *pf = calloc(1, sizeof(struct afunix_polyfil_t));
+    struct afunix_polyfil_t *pf = (struct afunix_polyfil_t *)
+        calloc(1, sizeof(struct afunix_polyfil_t));
     int ret = socketpair(AF_UNIX, SOCK_DGRAM, 0, pf->user);
     ret     = socketpair(AF_UNIX, SOCK_DGRAM, 0, pf->address_exchange);
 
@@ -190,22 +195,22 @@ static void polyfill_backend_actual(struct afunix_polyfil_t *pf)
         }
     } else if (pf->actual_mode == 2) {
         struct sockaddr_un clientname;
-        int size = sizeof (clientname);
-        int new = accept (pf->actual,(struct sockaddr *) &clientname, &size);
-        if (fcntl(new, F_SETFL, fcntl(new, F_GETFL, 0) | O_NONBLOCK) == -1) {
-            close(new);
+        unsigned int size = sizeof (clientname);
+        int nuw = accept (pf->actual,(struct sockaddr *) &clientname, &size);
+        if (fcntl(nuw, F_SETFL, fcntl(nuw, F_GETFL, 0) | O_NONBLOCK) == -1) {
+            close(nuw);
             perror("afunix_polyfill: fcntl");
             return;
         }
         for (int i = 0; i < AFUNIX_POLYFILL_MAX_CONNECTIONS != 0; i++) {
             if (pf->client_connections[i] == 0) {
-                pf->client_connections[i] = new;
+                pf->client_connections[i] = nuw;
                 ++pf->client_connections_count;
                 return;
             }
         }
         fprintf(stderr, "afunix_polyfill: too many clients\n");
-        close(new);
+        close(nuw);
     } else {
         fprintf(stderr, "BUG! in afunix_polyfill: unknown actual mode\n");
         read(pf->actual, pf->buf, sizeof(pf->buf));
@@ -431,3 +436,6 @@ static void unmap_polyfill(struct afunix_polyfil_t * pf)
     }
 }
 
+#ifdef __cplusplus
+}
+#endif
