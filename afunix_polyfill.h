@@ -165,7 +165,7 @@ int afunix_recvfrom (int fd, void *buffer, size_t length,  int flags, int *addre
     //clear pending exchanges.
     while(recv(pf->address_exchange[1], pf->buf,  sizeof(address), MSG_DONTWAIT)>0){}
 
-    recv(pf->address_exchange[1], address,  sizeof(address), 0);
+    recv(pf->address_exchange[1], address,  sizeof(address), flags);
     return recv(fd, buffer, length, flags);
 }
 
