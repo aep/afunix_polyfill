@@ -11,6 +11,8 @@ afunix-polyfill is a complete linux IPC solution, compared to dbus it is:
 - theoretically posix compliant
 - bullshit and NIH free
 
+A word of warning: this is an experiment or proof-of-concept or RFC. If you need something usable, check back 2017.
+
 The backstory originates from ubus (aep-ubus, not openwrt-ubus),
 which supports aproximatly the same messaging directives as dbus without a server.
 
@@ -22,9 +24,8 @@ almost every IPC problem people have in linux can be reduced to:
 
 which could easily be implemented with DGRAM on AF_UNIX plus SO_REUSEPORT and maybe SO_BROADCAST.  
 but none of these things work in linux.  
-So here is a 'polyfill' for that, which emulates it, until it gets fixed in linux  
-(probably never, considered that IPC is a political minefield)
-
+So here is a 'polyfill' for that, which emulates it, until it gets fixed in linux.    
+As soon as it's fixed, you can seemlessly transition to the proper posix api, by just removing the afunix_ prefix.
 
 Use Case Examples in plain posix
 -------------------------------------------
