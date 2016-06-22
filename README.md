@@ -35,7 +35,7 @@ here's some pseudo code of how to implement any of the dbus
 functionality in just plain posix.  
 At least you could, if linux didn't suck.
 
-1. "remote procedure call returning void"
+1) "remote procedure call returning void"
 
 ```C
 //server
@@ -49,7 +49,7 @@ connect(sock, "/var/bus/myservice/dostuff");
 send(sock, "do it!");
 ```
 
-2. "publish/subscribe" or "notification"
+2) "publish/subscribe" or "notification"
 
 ```C
 //server
@@ -63,7 +63,7 @@ connect(sock, "/var/bus/myservice/event");
 recv(socket, buf);
 ```
 
-3. "remote procedure call returning string"
+3) "remote procedure call returning string"
 
 ```C
 //server
@@ -202,13 +202,13 @@ commandline tool
 The 'unixbus' commandline tool is in cmd.c and built with 'make' by default.
 The main use cases are covered from a cient perspective:
 
-1. "remote procedure call returning void"
+1) "remote procedure call returning void"
 ```bash
 $ unixbus call session:myservice:dostuff
 $
 ```
 
-2. "publish/subscribe" or "notification"
+2) "publish/subscribe" or "notification"
 ```bash
 $ unixbus listen session:myservice:thatevent
 hey everyone, things happened!
@@ -216,7 +216,7 @@ hey everyone, things happened again!
 wow su much happen!
 ```
 
-3. "remote procedure call returning string"
+3) "remote procedure call returning string"
 ```bash
 $ unixbus call session:myservice:do these things
 i did these things!
