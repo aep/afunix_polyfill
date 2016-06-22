@@ -1,13 +1,9 @@
-ALL: server call broadcast listen
+BINS=unixbus
+
+ALL: $(BINS)
 
 clean:
-	rm -f server call broadcast listen
+	rm -f $(BINS)
 
-call: test.c
-	$(CC) $^ -o $@ -lpthread -DTEST_CALL
-server: test.c
-	$(CC) $^ -o $@ -lpthread -DTEST_SERVER
-broadcast: test.c
-	$(CC) $^ -o $@ -lpthread -DTEST_BROADCAST
-listen: test.c
-	$(CC) $^ -o $@ -lpthread -DTEST_LISTEN
+unixbus: cmd.c
+	$(CC) $(CFLAGS) $^ -o $@ -lpthread

@@ -5,6 +5,7 @@ afunix-polyfill is a complete linux IPC solution, compared to dbus it is:
 
 - just a socket
 - serverless
+- single header file
 - data format agnostic
 - dependency-free
 - using unix permissions instead of custom policies
@@ -146,6 +147,12 @@ exactly the same for "who may talk to this service"
 chgrp cups /var/0chan/cupsd/something.cmd
 ```
 
+Using
+--------------
+
+everything is in a single header file 'afunix_polyfill.h',
+prefferably add a git submodule to your project and just include that header.
+
 Limitations and Gotchas
 --------------
 
@@ -156,3 +163,90 @@ Limitations and Gotchas
 - same for afunix_send()
 - the whole thing isnt thread safe yet, but that can be done later.
   its more in proof of concept state
+- unlike with real DGRAM, there is no way to transport a 0 bytes package.
+  to prevent inconsistent behaviour, sending 0 bytes will close the channel
+
+
+High level functionality
+-----------------------
+
+In addition to just fixing af_unix, this polyfill has optional high level apis,
+as options to connect and bind:A
+
+- AFUNIX_PATH_CONVENTION
+  in addition to an absolute file path,
+  take a shorter service name that is matched to an absolute path
+  according to conventions described below
+- AFUNIX_MAKE_PATH
+  when using service names, create the real paths automatically
+
+path conventions
+----------------
+
+there's a system bus and a session bus.
+system is in /var/run/unixbus/<service>/<method>.seqpacket
+service is in $XDG_RUNTIME_DIR/unixbus/<service>/<method>.seqpacket
+
+short service names are identified as <system|session>:<service>:<method>,
+for example:
+
+```C
+afunix_bind(fd, "service:xlock:lock", AFUNIX_PATH_CONVENTION | AFUNIX_MAKE_PATH);
+```
+will create $XDG_RUNTIME_DIR/unixbus/xlock/lock.seqpacket
+
+
+commandline tool
+----------------
+
+The 'unixbus' commandline tool is in cmd.c and built with 'make' by default.
+The main use cases are covered from a cient perspective:
+
+1. "remote procedure call returning void"
+```bash
+$ unixbus call session:myservice:dostuff
+$
+```
+
+2. "publish/subscribe" or "notification"
+```bash
+$ unixbus listen session:myservice:thatevent
+hey everyone, things happened!
+hey everyone, things happened again!
+wow su much happen!
+```
+
+3. "remote procedure call returning string"
+```bash
+$ unixbus call session:myservice:do these things
+i did these things!
+$
+```
+
+There's also sever commands, although they're a bit excotic:
+
+```bash
+$ unixbus listen session:myservice:do
+derp
+merp
+```
+other shell:
+
+```bash
+$ unixbus call session:myservice:do derp
+$ unixbus call session:myservice:do merp
+```
+
+xargs is pretty fun
+
+```bash
+$ echo 'echo $1 | tr a e' > /tmp/foo
+$ unixbus xargs session:myservice:echo sh /tmp/foo
+```
+
+other shell:
+```bash
+$ unbixbus call session:myservice:echo amazing
+emezing
+$
+```

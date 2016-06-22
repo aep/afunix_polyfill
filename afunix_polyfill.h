@@ -8,8 +8,12 @@
 #include <stropts.h>
 #include <poll.h>
 #include <fcntl.h>
+#include <sys/stat.h>
 
 //----------------- API ----------------
+#define AFUNIX_PATH_CONVENTION 0x1
+#define AFUNIX_MAKE_PATH       0x2
+
 int afunix_socket   (int options);
 int afunix_bind     (int fd, const char *name, int options);
 int afunix_connect  (int fd, const char *name, int options);
@@ -22,6 +26,7 @@ int afunix_sendto   (int fd, void *buffer, size_t length,  int flags, int addres
 #define AFUNIX_POLYFILL_MAX_CONNECTIONS 1024
 #define AFUNIX_MAX_PACKAGE_SIZE 1024
 #define debug_fprintf(...)
+//#define debug_fprintf(...) fprintf(__VA_ARGS__)
 struct afunix_polyfil_t{
     int user[2];
     int address_exchange[2];
@@ -94,11 +99,14 @@ int afunix_close (int fd)
     struct afunix_polyfil_t * pf = mapped_polyfill(fd);
     if (pf == NULL)
         return EINVAL;
-    write(pf->user[1], 0, 0);
-    close(pf->user[1]);
-    pthread_join(pf->thread,0);
+    pthread_t thread = pf->thread;
+    write(pf->address_exchange[1], 0, 0);
+    close(pf->address_exchange[1]);
+    pthread_join(thread,0);
     return 0;
 }
+
+static void afunix_make_path(struct sockaddr_un *sa, const char *name, int options);
 
 int afunix_bind (int fd, const char *name, int options)
 {
@@ -108,7 +116,7 @@ int afunix_bind (int fd, const char *name, int options)
 
     struct sockaddr_un sa;
     sa.sun_family = AF_UNIX;
-    strcpy(sa.sun_path, name);
+    afunix_make_path(&sa, name, options);
 
     //TODO: different cleanup strategy
     unlink(sa.sun_path);
@@ -133,7 +141,7 @@ int afunix_connect (int fd, const char *name, int options)
 
     struct sockaddr_un sa;
     sa.sun_family = AF_UNIX;
-    strcpy(sa.sun_path, name);
+    afunix_make_path(&sa, name, options);
 
     int len = strlen(sa.sun_path) + sizeof(sa.sun_family);
     if (connect(pf->actual, (struct sockaddr *)&sa, len) != 0)
@@ -177,9 +185,8 @@ static void polyfill_backend_actual(struct afunix_polyfil_t *pf)
         send(pf->address_exchange[0], &connection, sizeof(connection), 0);
         len = send(pf->user[0], pf->buf, len, 0);
         debug_fprintf(stderr, "  writen %d into user\n", len);
-        if (len < 1) {
-            debug_fprintf(stderr, "  closed\n", len);
-            pf->exit = 1;
+        if (len < 0) {
+            perror("polyfill_backend_actual::read");
         }
     } else if (pf->actual_mode == 2) {
         struct sockaddr_un clientname;
@@ -208,7 +215,11 @@ static void polyfill_backend_actual(struct afunix_polyfil_t *pf)
 static void polyfill_backend_address_exchange(struct afunix_polyfil_t *pf)
 {
     debug_fprintf(stderr, "> address_exchange\n");
-    recv(pf->address_exchange[0], &pf->next_send_address, sizeof(pf->next_send_address), 0);
+    int ret = recv(pf->address_exchange[0], &pf->next_send_address, sizeof(pf->next_send_address), 0);
+    if (ret < sizeof(pf->next_send_address)) {
+        debug_fprintf(stderr, "  closed\n");
+        pf->exit = 1;
+    }
 }
 
 static void polyfill_backend_user(struct afunix_polyfil_t *pf)
@@ -217,7 +228,7 @@ static void polyfill_backend_user(struct afunix_polyfil_t *pf)
 
     int len = recv(pf->user[0], pf->buf, sizeof(pf->buf), 0);
     debug_fprintf(stderr, "  got %d bytes\n", len);
-    if (len == 0) {
+    if (len < 1) {
         pf->exit = 1;
         return;
     }
@@ -335,7 +346,47 @@ static void *polyfill_thread(void *_pf)
             polyfill_backend_actual(pf);
         }
     }
+    debug_fprintf(stderr, "polythread backend exits\n");
     afunix_free_internal(pf);
+}
+
+static void afunix_make_path(struct sockaddr_un *sa, const char *name, int options)
+{
+    if (!(options & AFUNIX_PATH_CONVENTION)) {
+        strcpy(sa->sun_path, name);
+        return;
+    }
+
+    char *name_ = strdup(name);
+    char *saveptr;
+    char * n = strtok_r(name_, ":", &saveptr);
+    if (strcmp(n,name) == 0 || n == 0) {
+        strcpy(sa->sun_path, name);
+        return;
+    }
+    if (strcmp(n, "system") == 0) {
+        strncpy(sa->sun_path, "/var/run/unixbus", sizeof(sa->sun_path) - 2);
+    } else if (strcmp(n, "session") == 0) {
+        strncpy(sa->sun_path, getenv("XDG_RUNTIME_DIR"), sizeof(sa->sun_path) - 2);
+        strncat(sa->sun_path, "/unixbus/",
+                sizeof(sa->sun_path) - strlen(sa->sun_path) - 2);
+    }
+
+    for(;;) {
+        n = strtok_r(NULL, ":", &saveptr);
+        if (n == NULL) {
+            break;
+        }
+        if (options & AFUNIX_MAKE_PATH){
+            debug_fprintf(stderr, "mkdir %s\n", sa->sun_path);
+            mkdir(sa->sun_path, 0755);
+        }
+        strcat(sa->sun_path, "/");
+        strncat(sa->sun_path, n,
+                sizeof(sa->sun_path) - strlen(sa->sun_path) - 2);
+    }
+    strncat(sa->sun_path, ".seqpacket", sizeof(sa->sun_path) - strlen(sa->sun_path) - 2);
+    free(name_);
 }
 
 //------------------- mapping implementation ----------
