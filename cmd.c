@@ -53,7 +53,7 @@ int main(int argc, char **argv)
                 return 5;
             }
             strcat(bla, "/unixbus/");
-            strcat(bla, "; find -type s | cut -d '.' -f 2 | cut -d '/' -f 2-20 | tr '/' ':' )");
+            strcat(bla, "&& find -type s | cut -d '.' -f 2 | cut -d '/' -f 2-20 | tr '/' ':' )");
         }
         system(bla);
     } else if (strcmp(command, "connect") == 0 || strcmp(command, "call") == 0) {
