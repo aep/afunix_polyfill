@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/socket.h>
 #include <errno.h>
 #include <sys/un.h>
