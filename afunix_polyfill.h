@@ -74,6 +74,7 @@ static void afunix_free_internal(struct afunix_polyfil_t *pf)
         if (pf->client_connections[i] != 0)
             close(pf->client_connections[i]);
     }
+    unmap_polyfill(pf);
     free(pf);
 }
 
@@ -413,10 +414,13 @@ static void map_polyfill(struct afunix_polyfil_t *pf)
         return;
     }
     struct afunix_polyfil_t *n = polyfills;
-    while (n != 0) {
+    for(int i = 0; n != 0; i++) {
+        debug_fprintf(stderr, "  %d -> %p\n", i, n);
         if (n->next == NULL) {
             n->next = pf;
+            return;
         }
+        n = n->next;
     }
     fprintf(stderr, "corrupt map\n");
     abort();
