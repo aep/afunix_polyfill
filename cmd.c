@@ -83,10 +83,13 @@ int main(int argc, char **argv)
         if (strcmp(command, "call") == 0 || strcmp(command, "invoke") == 0 ) {
             char buf[AFUNIX_MAX_PACKAGE_SIZE] = {0};
             for (int i = 3; argv[i] != 0; i++) {
+                if (i > 3) {
+                    strcat(buf, " ");
+                }
                 strncat(buf, argv[i], AFUNIX_MAX_PACKAGE_SIZE - strlen(buf) - 1);
-                strcat(buf, " ");
             }
-            strcat(buf, " ");
+            if (buf[0] == 0)
+                buf[0] = ' ';
             send(chan, buf, strlen(buf), 0);
 
             if (strcmp(command, "call") == 0){
