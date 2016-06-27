@@ -1,0 +1,22 @@
+#include <sys/un.h>
+#include <sys/socket.h>
+#include <unistd.h>
+
+int unixbus_invoke(const char *path, const char *message, int len)
+{
+    struct sockaddr_un sa;
+    sa.sun_family = AF_UNIX;
+    strcpy(sa.sun_path, path);
+    int client = socket(AF_UNIX, SOCK_SEQPACKET, 0);
+    int l = strlen(sa.sun_path) + sizeof(sa.sun_family);
+    if (connect(client,  (struct sockaddr *)&sa, l) != 0){
+        return 0;
+    }
+    send(client, message, len, 0);
+    close(client);
+}
+
+int main(int argc, char **argv)
+{
+    unixbus_invoke(argv[1], argv[2], strlen(argv[2]));
+}
