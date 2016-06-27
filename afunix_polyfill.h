@@ -214,7 +214,7 @@ static void polyfill_backend_actual(struct afunix_polyfil_t *pf)
         fprintf(stderr, "afunix_polyfill: too many clients\n");
         close(nuw);
     } else {
-        fprintf(stderr, "BUG! in afunix_polyfill: unknown actual mode\n");
+        fprintf(stderr, "BUG! in afunix_polyfill: unknown actual mode %d\n", pf->actual_mode);
         read(pf->actual, pf->buf, sizeof(pf->buf));
     }
 }
@@ -253,7 +253,7 @@ static void polyfill_backend_user(struct afunix_polyfil_t *pf)
             }
         }
     } else {
-        fprintf(stderr, "BUG! in afunix_polyfill: unknown actual mode\n");
+        fprintf(stderr, "BUG! in afunix_polyfill: unknown actual mode %d\n", pf->actual_mode);
     }
 }
 
