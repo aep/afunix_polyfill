@@ -11,6 +11,11 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 
+#ifdef AFUNIX_POLYFILL_INCLUDED
+#error "cant include afunix_polyfill.h multiple times. only include in .c/.cpp file"
+#endif
+#define AFUNIX_POLYFILL_INCLUDED
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -19,12 +24,12 @@ extern "C" {
 #define AFUNIX_PATH_CONVENTION 0x1
 #define AFUNIX_MAKE_PATH       0x2
 
-int afunix_socket   (int options);
-int afunix_bind     (int fd, const char *name, int options);
-int afunix_connect  (int fd, const char *name, int options);
-int afunix_close    (int fd);
-int afunix_recvfrom (int fd, void *buffer, size_t length,  int flags, int *address);
-int afunix_sendto   (int fd, void *buffer, size_t length,  int flags, int address);
+static int afunix_socket   (int options);
+static int afunix_bind     (int fd, const char *name, int options);
+static int afunix_connect  (int fd, const char *name, int options);
+static int afunix_close    (int fd);
+static int afunix_recvfrom (int fd, void *buffer, size_t length,  int flags, int *address);
+static int afunix_sendto   (int fd, void *buffer, size_t length,  int flags, int address);
 
 //----------------- mapping ----------------
 
@@ -78,7 +83,7 @@ static void afunix_free_internal(struct afunix_polyfil_t *pf)
     free(pf);
 }
 
-int afunix_socket (int options)
+static int afunix_socket (int options)
 {
     struct afunix_polyfil_t *pf = (struct afunix_polyfil_t *)
         calloc(1, sizeof(struct afunix_polyfil_t));
@@ -101,7 +106,7 @@ int afunix_socket (int options)
     return pf->user[1];
 }
 
-int afunix_close (int fd)
+static int afunix_close (int fd)
 {
     struct afunix_polyfil_t * pf = mapped_polyfill(fd);
     if (pf == NULL)
@@ -115,7 +120,7 @@ int afunix_close (int fd)
 
 static void afunix_make_path(struct sockaddr_un *sa, const char *name, int options);
 
-int afunix_bind (int fd, const char *name, int options)
+static int afunix_bind (int fd, const char *name, int options)
 {
     struct afunix_polyfil_t * pf = mapped_polyfill(fd);
     if (pf == NULL)
@@ -140,7 +145,7 @@ int afunix_bind (int fd, const char *name, int options)
     return 0;
 }
 
-int afunix_connect (int fd, const char *name, int options)
+static int afunix_connect (int fd, const char *name, int options)
 {
     struct afunix_polyfil_t * pf = mapped_polyfill(fd);
     if (pf == NULL)
@@ -158,7 +163,7 @@ int afunix_connect (int fd, const char *name, int options)
     return 0;
 }
 
-int afunix_recvfrom (int fd, void *buffer, size_t length,  int flags, int *address)
+static int afunix_recvfrom (int fd, void *buffer, size_t length,  int flags, int *address)
 {
     struct afunix_polyfil_t * pf = mapped_polyfill(fd);
     if (pf == NULL)
@@ -171,7 +176,7 @@ int afunix_recvfrom (int fd, void *buffer, size_t length,  int flags, int *addre
     return recv(fd, buffer, length, flags);
 }
 
-int afunix_sendto   (int fd, void *buffer, size_t length,  int flags, int address)
+static int afunix_sendto   (int fd, void *buffer, size_t length,  int flags, int address)
 {
     struct afunix_polyfil_t * pf = mapped_polyfill(fd);
     if (pf == NULL)
