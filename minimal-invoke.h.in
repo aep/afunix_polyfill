@@ -15,8 +15,3 @@ int unixbus_invoke(const char *path, const char *message, int len)
     send(client, message, len, 0);
     close(client);
 }
-
-int main(int argc, char **argv)
-{
-    unixbus_invoke(argv[1], argv[2], strlen(argv[2]));
-}
