@@ -150,7 +150,8 @@ static int afunix_close (int fd)
     }
     pthread_t thread = pf->thread;
     write(pf->address_exchange[1], 0, 0);
-    close(pf->address_exchange[1]);
+    //dont close. message may be lost. probably race condition
+    //close(pf->address_exchange[1]);
     pf->address_exchange[1] = 0;
     pthread_join(thread,0);
     return 0;
