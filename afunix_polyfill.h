@@ -216,7 +216,7 @@ static int afunix_recvfrom (int fd, void *buffer, size_t length,  int flags, int
 {
     struct afunix_polyfil_t * pf = mapped_polyfill(fd);
     if (pf == NULL)
-        return EINVAL;
+        return -EINVAL;
     *address = 0;
     //clear pending exchanges.
     while(recv(pf->address_exchange[1], pf->buf,  sizeof(address), MSG_DONTWAIT) > 0){}
@@ -229,7 +229,7 @@ static int afunix_sendto   (int fd, void *buffer, size_t length,  int flags, int
 {
     struct afunix_polyfil_t * pf = mapped_polyfill(fd);
     if (pf == NULL)
-        return EINVAL;
+        return -EINVAL;
     send(pf->address_exchange[1], &address, sizeof(address), flags);
     return send(fd, buffer, length, flags);
 }
