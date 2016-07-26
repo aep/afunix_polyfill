@@ -13,6 +13,9 @@ LDFLAGS += -lpthread -g
 unixbus: cmd.c
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
+test: test.c
+	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
+
 minimal-invoke.h: minimal-invoke.h.in
 	echo "/*unibus version 1 absolute minimal invoke */" > $@
 	./minifier.py $^ >> $@
