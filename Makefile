@@ -1,4 +1,4 @@
-BINS=unixbus minimal-invoke.h test
+BINS=unixbus minimal-invoke.h
 
 ALL: $(BINS)
 
