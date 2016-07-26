@@ -201,8 +201,6 @@ int main(int argc, char **argv)
 
         fprintf(stderr, "\n\n\n\n\n");
 
-        //FIXME malloc dies otherwise. some more thread stuff?
-        usleep(10);
     }
     test_map();
 
