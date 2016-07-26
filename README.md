@@ -158,9 +158,10 @@ Limitations and Gotchas
 
 - using any of the standard posix functions instead of the prefixed afunix ones
   is undefined behaviour. there is no way to detect that either.
-- two threads doing afunix_recv() on the same chan at the same time,
+- two threads doing afunix_recvfrom() on the same chan at the same time,
   is undefined behaviour, because passing the address is thread unaware.
 - same for afunix_send()
+- mixing afunix_recvfrom and recv on the same socket is undefined behaviour
 - the whole thing isnt thread safe yet, but that can be done later.
   its more in proof of concept state
 - unlike with real DGRAM, there is no way to transport a 0 bytes package.

@@ -1,0 +1,4 @@
+compiler:
+  - gcc
+language: C
+script: make test && ./test
