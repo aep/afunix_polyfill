@@ -1,3 +1,6 @@
+[![Build Status](https://travis-ci.org/aep/afunix_polyfill.svg?branch=master)](https://travis-ci.org/aep/afunix_polyfill)
+[![NoDependencies](http://aep.github.io/images/no-dependencies.svg)](#)
+
 afunix-polyfill - AF_UNIX fixed in userspace
 ============================
 
