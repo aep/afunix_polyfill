@@ -219,7 +219,7 @@ static int afunix_bind (int fd, const char *name, int options)
 
     pf->actual_mode = 2;
     pthread_create (&(pf->thread), 0, polyfill_thread, pf);
-#ifdef _GNU_SOURCE
+#ifdef AFUNIX_DEBUGGING
     pthread_setname_np(pf->thread, "polyfill_thread");
 #endif
     return 0;
